@@ -21,7 +21,22 @@ set -u
 cd "$(dirname "$0")" || exit 1
 
 BIN=./artex
-[ -x "$BIN" ] || { echo "[artex] 找不到可执行文件 $BIN" >&2; exit 1; }
+if [ ! -x "$BIN" ]; then
+    if [ -f docker-compose.yml ] && docker compose version >/dev/null 2>&1; then
+        echo "[artex] 检测到 Docker 环境，正在启动 ARTEX..."
+
+        docker compose up -d || exit 1
+
+        echo "[artex] Docker 容器状态："
+        docker compose ps
+
+        echo "[artex] 访问地址：http://localhost:8787"
+        exit 0
+    fi
+
+    echo "[artex] 找不到本地可执行文件，也无法使用 Docker Compose" >&2
+    exit 1
+fi
 
 RESTART_CODE=75
 MAX_DELAY=60
